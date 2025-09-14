@@ -1,4 +1,4 @@
-# Audit Training Management System (ATMS)
+# Audit Training Management System (ATMS).
 
 A comprehensive full-stack web application for managing audit training programs, built with React, TypeScript, Tailwind CSS, and Firebase.
 
