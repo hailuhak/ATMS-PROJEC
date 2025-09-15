@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -9,27 +9,37 @@ interface AuthPageProps {
   onBack: () => void;
 }
 
+// Define the allowed roles
+type Role = 'admin' | 'trainer' | 'trainee' | 'user' | 'pending';
+
+// Form data type
+interface FormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  displayName: string;
+  role: Role;
+}
+
 export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     confirmPassword: '',
     displayName: '',
-    role: '',
+    role: 'trainee', // default role
   });
 
   const { login, signup, loginWithGoogle } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const value = e.target.name === 'role' ? (e.target.value as Role) : e.target.value;
+    setFormData(prev => ({ ...prev, [e.target.name]: value }));
     setError('');
   };
 
@@ -70,7 +80,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
@@ -100,10 +110,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {isLogin 
-                ? 'Sign in to access your dashboard' 
-                : 'Join ATMS to start your training journey'
-              }
+              {isLogin ? 'Sign in to access your dashboard' : 'Join ATMS to start your training journey'}
             </p>
           </div>
 
@@ -183,7 +190,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   >
-                    <option value="user">User</option>
                     <option value="trainee">Trainee</option>
                     <option value="trainer">Trainer</option>
                     <option value="admin">Admin</option>
@@ -192,27 +198,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               </>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              loading={loading}
-            >
+            <Button type="submit" className="w-full" size="lg" loading={loading}>
               {isLogin ? 'Sign In' : 'Create Account'}
             </Button>
           </form>
 
           {/* Divider */}
-          <div className="my-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                  Or continue with
-                </span>
-              </div>
+          <div className="my-6 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -251,10 +250,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium transition-colors"
             >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
-              }
+              {isLogin
+                ? "Don't have an account? Sign up"
+                : 'Already have an account? Sign in'}
             </button>
           </div>
         </motion.div>
