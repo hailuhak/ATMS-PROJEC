@@ -9,8 +9,8 @@ import {
   Upload,
   CheckSquare
 } from 'lucide-react';
-import { StatsCard } from '../../components/dashboard/StatsCard';
-import { RecentActivity } from '../../components/dashboard/RecentActivity';
+import { StatsCard } from '../../components/Cards/StatsCard';
+import { RecentActivity } from '../../components/Cards/RecentActivity';
 import { CourseCard } from '../../components/courses/CourseCard';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../../components/ui/Card';

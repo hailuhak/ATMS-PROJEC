@@ -23,18 +23,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
 
   const getMenuItems = () => {
     const baseItems = [
-      { id: 'dashboard', label: 'Dashboard', icon: Home },
+      { id: 'dashboard', label: 'Home', icon: Home },
     ];
-
-    // switch (currentUser?.role) {
-    //   case 'admin':
-    //     return [
-    //       ...baseItems,
-    //       { id: 'users', label: 'User Management', icon: Users },
-    //       { id: 'courses', label: 'Course Management', icon: BookOpen },
-    //       { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    //       { id: 'activities', label: 'Activity Logs', icon: FileText },
-//     ];
     switch (currentUser?.role) {
   case 'admin':
     return [

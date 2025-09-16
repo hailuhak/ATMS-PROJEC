@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';  // ✅ Add this
 
 const firebaseConfig = {
   apiKey: "AIzaSyBU6HipDksBICVVD0sMEs2HvpEoX-wobvs",
@@ -11,6 +12,7 @@ const firebaseConfig = {
   messagingSenderId: "1009805799311",
   appId: "1:1009805799311:web:94e43c6089cd1b23af25fa"
 };
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -18,16 +20,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-
-// Connect to emulators in development;
-// if (import.meta.env.DEV) {
-//   try {
-//     connectAuthEmulator(auth, "http://localhost:9099");
-//     connectFirestoreEmulator(db, 'localhost', 8080);
-//     connectStorageEmulator(storage, "localhost", 9199);
-//   } catch (error) {
-//     console.log('Emulators already connected or not available');
-//   }
-// }
+export const functions = getFunctions(app);  // ✅ Export functions
 
 export default app;

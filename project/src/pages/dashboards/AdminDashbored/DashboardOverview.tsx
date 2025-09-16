@@ -1,28 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { StatsCard } from "../../../components/dashboard/StatsCard";
+import { StatsCard } from "../../../components/Cards/StatsCard";
 import { CourseCard } from "../../../components/courses/CourseCard";
-import { RecentActivity } from "../../../components/dashboard/RecentActivity";
-import { Card, CardContent, CardHeader } from "../../../components/ui/Card";
+import { RecentActivity } from "../../../components/Cards/RecentActivity";
+import { Card, CardContent, CardHeader } from "../../../components/ui/Card"; 
 import { Button } from "../../../components/ui/Button";
 import { Plus, Users, BookOpen, TrendingUp, Activity } from "lucide-react";
 import { db } from "../../../lib/firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { Course, User } from "../../../types";
+import { Course } from "../../../types";
 
 export const DashboardOverview: React.FC = () => {
   const [usersCount, setUsersCount] = useState(0);
   const [courses, setCourses] = useState<Course[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [showAllCourses, setShowAllCourses] = useState(false);
 
   // Real-time Firestore listeners
   useEffect(() => {
-    // Listen to users
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
       setUsersCount(snapshot.size);
     });
 
-    // Listen to courses
-    const coursesQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"));
+    const coursesQuery = query(
+      collection(db, "courses"),
+      orderBy("createdAt", "desc")
+    );
     const unsubscribeCourses = onSnapshot(coursesQuery, (snapshot) => {
       const formattedCourses = snapshot.docs.map((doc) => {
         const data = doc.data() as any;
@@ -37,12 +39,18 @@ export const DashboardOverview: React.FC = () => {
           category: data.category || "",
           maxParticipants: data.maxParticipants || 0,
           currentParticipants: data.currentParticipants || 0,
-          startDate: data.startDate?.toDate ? data.startDate.toDate() : new Date(),
+          startDate: data.startDate?.toDate
+            ? data.startDate.toDate()
+            : new Date(),
           endDate: data.endDate?.toDate ? data.endDate.toDate() : new Date(),
           materials: data.materials || [],
           status: data.status || "active",
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
-          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(),
+          createdAt: data.createdAt?.toDate
+            ? data.createdAt.toDate()
+            : new Date(),
+          updatedAt: data.updatedAt?.toDate
+            ? data.updatedAt.toDate()
+            : new Date(),
         } as Course;
       });
       setCourses(formattedCourses);
@@ -57,11 +65,14 @@ export const DashboardOverview: React.FC = () => {
 
   // Derived stats
   const completionRate = courses.length
-    ? Math.round((courses.filter(c => c.status === "completed").length / courses.length) * 100)
+    ? Math.round(
+        (courses.filter((c) => c.status === "completed").length / courses.length) *
+          100
+      )
     : 0;
 
   const monthlySessions = courses.filter(
-    c => c.startDate.getMonth() === new Date().getMonth()
+    (c) => c.startDate.getMonth() === new Date().getMonth()
   ).length;
 
   return (
@@ -70,15 +81,13 @@ export const DashboardOverview: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Admin Dashboard
+            Home Page
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Manage your audit training system
           </p>
         </div>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" /> Quick Action
-        </Button>
+        
       </div>
 
       {/* Stats */}
@@ -86,32 +95,24 @@ export const DashboardOverview: React.FC = () => {
         <StatsCard
           title="Total Users"
           value={usersCount.toString()}
-          change="12.3%"
-          changeType="increase"
           icon={Users}
           color="blue"
         />
         <StatsCard
           title="Active Courses"
           value={courses.length.toString()}
-          change="8.1%"
-          changeType="increase"
           icon={BookOpen}
           color="green"
         />
         <StatsCard
           title="Completion Rate"
           value={`${completionRate}%`}
-          change="2.4%"
-          changeType="increase"
           icon={TrendingUp}
           color="yellow"
         />
         <StatsCard
           title="Monthly Sessions"
           value={monthlySessions.toString()}
-          change="15.8%"
-          changeType="increase"
           icon={Activity}
           color="purple"
         />
@@ -124,10 +125,14 @@ export const DashboardOverview: React.FC = () => {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Recent Courses
+                  {showAllCourses ? "All Courses" : "Recent Courses"}
                 </h3>
-                <Button variant="outline" size="sm">
-                  View All
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAllCourses((prev) => !prev)}
+                >
+                  {showAllCourses ? "Show Less" : "View All"}
                 </Button>
               </div>
             </CardHeader>
@@ -139,15 +144,21 @@ export const DashboardOverview: React.FC = () => {
                         <div className="bg-gray-200 dark:bg-gray-700 rounded-lg h-48"></div>
                       </div>
                     ))
-                  : courses.slice(0, 4).map((course) => (
-                      <CourseCard key={course.id} course={course} showActions={false} />
-                    ))}
+                  : (showAllCourses ? courses : courses.slice(0, 4)).map(
+                      (course) => (
+                        <CourseCard
+                          key={course.id}
+                          course={course}
+                          showActions={false}
+                        />
+                      )
+                    )}
               </div>
             </CardContent>
           </Card>
         </div>
         <div>
-          <RecentActivity /> {/* Can also be hooked to Firestore real-time */}
+          <RecentActivity />
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { RecentActivity } from "../../../components/dashboard/RecentActivity";
+import { RecentActivity } from "../../../components/Cards/RecentActivity";
 
 export const ActivityLogs: React.FC = () => {
   return (

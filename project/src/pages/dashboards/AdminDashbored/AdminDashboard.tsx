@@ -1,9 +1,9 @@
 import React from "react";
-import { DashboardOverview } from "./dashbord/DashboardOverview";
-import { CourseManagement } from  './dashbord/CourseManagement';
-import { UserManagement } from "./dashbord/UserManagement";
-import { Analytics } from "./dashbord/Analytics";
-import { ActivityLogs } from "./dashbord/ActivityLogs";
+import { DashboardOverview } from "./DashboardOverview";
+import { CourseManagement } from  './CourseManagement';
+import { UserManagement } from "./UserManagement";
+import { Analytics } from "./Analytics";
+import { ActivityLogs } from "./ActivityLogs";
 
 interface AdminDashboardProps {
   activeSection: "users" | "courses" | "analytics" | "activities";

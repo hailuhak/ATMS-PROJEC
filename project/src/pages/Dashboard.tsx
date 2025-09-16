@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
-import { AdminDashboard } from './dashboards/AdminDashboard';
+import { AdminDashboard } from './dashboards/AdminDashbored/AdminDashboard';
 import { TrainerDashboard } from './dashboards/TrainerDashboard';
 import { TraineeDashboard } from './dashboards/TraineeDashboard';
 import { UserDashboard } from './dashboards/UserDashboard';

@@ -8,7 +8,7 @@ import {
   Filter,
   Star
 } from 'lucide-react';
-import { StatsCard } from '../../components/dashboard/StatsCard';
+import { StatsCard } from '../../components/Cards/StatsCard';
 import { CourseCard } from '../../components/courses/CourseCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
