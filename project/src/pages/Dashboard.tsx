@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
 import { AdminDashboard } from './dashboards/AdminDashbored/AdminDashboard';
-import { TrainerDashboard } from './dashboards/TrainerDashboard';
-import { TraineeDashboard } from './dashboards/TraineeDashboard';
-import { UserDashboard } from './dashboards/UserDashboard';
-import { AdminPanel } from './dashboards/AdminPanel';
+import { TraineeDashboard } from './dashboards/TraineeDashbord/TraineeDashboard';
+import { TrainerDashboard } from './dashboards/TrainerDashbord/TrainerDashbord'; // adjust path if needed
+
+import { UserDashboard } from './dashboards/AllUserDashbord/UserDashboard';
+import { AdminPanel } from './dashboards/AdminDashbored/AdminPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';

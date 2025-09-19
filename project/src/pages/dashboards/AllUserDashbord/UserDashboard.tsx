@@ -8,12 +8,12 @@ import {
   Filter,
   Star
 } from 'lucide-react';
-import { StatsCard } from '../../components/Cards/StatsCard';
-import { CourseCard } from '../../components/courses/CourseCard';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Card, CardContent, CardHeader } from '../../components/ui/Card';
-import { useAuth } from '../../contexts/AuthContext';
+import { StatsCard } from '../../../components/Cards/StatsCard';
+import { CourseCard } from '../../../components/courses/CourseCard';
+import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
+import { Card, CardContent, CardHeader } from '../../../components/ui/Card';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface UserDashboardProps {
   activeSection: string;

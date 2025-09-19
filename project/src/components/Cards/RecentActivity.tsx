@@ -1,28 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock } from 'lucide-react';
-import { ActivityLog } from '../../types';
-import { activityService } from '../../services/activityService';
 import { Card, CardContent, CardHeader } from '../ui/Card';
+import { db } from '../../lib/firebase';
+import { collection, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
+
+// Define Activity type
+export interface ActivityLog {
+  id: string;
+  userName: string;
+  action: string;
+  target: string;
+  details?: string;
+  timestamp: Date; // we convert Firestore Timestamp to Date
+}
 
 export const RecentActivity: React.FC = () => {
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadActivities();
-  }, []);
+    const q = query(
+      collection(db, 'activities'),
+      orderBy('timestamp', 'desc'),
+      limit(5)
+    );
 
-  const loadActivities = async () => {
-    try {
-      const recentActivities = await activityService.getRecentActivities(5);
-      setActivities(recentActivities);
-    } catch (error) {
-      console.error('Failed to load activities:', error);
-    } finally {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetched: ActivityLog[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          userName: data.userName || 'Unknown',
+          action: data.action || '',
+          target: data.target || '',
+          details: data.details || '',
+          timestamp: data.timestamp instanceof Timestamp
+            ? data.timestamp.toDate()
+            : new Date(data.timestamp), // fallback
+        };
+      });
+
+      setActivities(fetched);
       setLoading(false);
-    }
-  };
+    }, (error) => {
+      console.error('Failed to fetch recent activities:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const formatTime = (date: Date) => {
     const now = new Date();
@@ -92,9 +119,11 @@ export const RecentActivity: React.FC = () => {
                     <span className="font-medium">{activity.userName}</span>
                     {' '}{activity.action} {activity.target}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {activity.details}
-                  </p>
+                  {activity.details && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {activity.details}
+                    </p>
+                  )}
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     {formatTime(activity.timestamp)}
                   </p>

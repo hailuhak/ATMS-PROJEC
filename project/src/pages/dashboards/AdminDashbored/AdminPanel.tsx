@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../../lib/firebase';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface PendingUser {
   id: string;

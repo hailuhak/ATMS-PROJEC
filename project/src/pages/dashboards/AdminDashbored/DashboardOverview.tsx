@@ -31,14 +31,11 @@ export const DashboardOverview: React.FC = () => {
         return {
           id: doc.id,
           title: data.title,
-          description: data.description,
           instructorId: data.instructorId,
           instructorName: data.instructorName,
           duration: data.duration || 0,
           level: data.level || "beginner",
           category: data.category || "",
-          maxParticipants: data.maxParticipants || 0,
-          currentParticipants: data.currentParticipants || 0,
           startDate: data.startDate?.toDate
             ? data.startDate.toDate()
             : new Date(),
