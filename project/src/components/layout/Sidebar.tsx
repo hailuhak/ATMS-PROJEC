@@ -33,25 +33,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
   }, []);
 
   const allMenuItems = [
-    { id: 'dashboard', label: 'Home', icon: Home },
-    { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
-    { id: 'pending-users', label: 'Pending Users', icon: UserCheck, roles: ['admin'] },
-    { id: 'courses', label: 'My Courses', icon: GraduationCap, roles: ['trainee'] },
-    { id: 'progress', label: 'Progress', icon: BarChart3, roles: ['trainee'] },
-    { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['trainee'] },
-    { id: 'resources', label: 'Resources', icon: FileText, roles: ['trainee'] },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, roles: ['trainer'] },
-    { id: 'sessions', label: 'Training Sessions', icon: Calendar, roles: ['trainer'] },
-    { id: 'attendance', label: 'Attendance', icon: UserCheck, roles: ['trainer'] },
-    { id: 'materials', label: 'Materials', icon: FileText, roles: ['trainer'] },
-    { id: 'courses', label: 'Course Management', icon: BookOpen, roles: ['admin'] },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, roles: ['admin'] },
-    { id: 'activities', label: 'Activity Logs', icon: FileText, roles: ['admin'] },
-  ];
+  // Common (all roles, including guest)
+  { id: 'dashboard', label: 'Home', icon: Home },
 
-  const menuItems = allMenuItems.filter(
-    (item) => !item.roles || item.roles.includes(currentUser?.role || '')
-  );
+  // Admin only
+  { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
+  { id: 'pending-users', label: 'Pending Users', icon: UserCheck, roles: ['admin'] },
+  { id: 'courses', label: 'Course Management', icon: BookOpen, roles: ['admin'] },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, roles: ['admin'] },
+  { id: 'activities', label: 'Activity Logs', icon: FileText, roles: ['admin'] },
+
+  // Trainer only
+  { id: 'courses', label: 'My Courses', icon: BookOpen, roles: ['trainer'] },
+  { id: 'sessions', label: 'Training Sessions', icon: Calendar, roles: ['trainer'] },
+  { id: 'attendance', label: 'Attendance', icon: UserCheck, roles: ['trainer'] },
+  { id: 'materials', label: 'Materials', icon: FileText, roles: ['trainer'] },
+
+  // Trainee only
+  { id: 'courses', label: 'My Courses', icon: GraduationCap, roles: ['trainee'] },
+  { id: 'progress', label: 'Progress', icon: BarChart3, roles: ['trainee'] },
+  { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['trainee'] },
+  { id: 'resources', label: 'Resources', icon: FileText, roles: ['trainee'] },
+
+  // Default / guest (no role or other role)
+  { id: 'courses', label: 'Browse Courses', icon: BookOpen, roles: ['pending'] },
+  { id: 'profile', label: 'Profile', icon: Users, roles: ['pending'] },
+];
+
+
+  const role = currentUser?.role || 'pending';
+
+const menuItems = allMenuItems.filter(
+  (item) => !item.roles || item.roles.includes(role)
+);
+
 
   return (
     <>
