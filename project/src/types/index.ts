@@ -13,7 +13,8 @@ export interface Course {
   title: string;
   instructorId: string;
   instructorName: string;
-  hours: number; // in hours
+  hours?: number; // in hours
+  duration?: number; // in days
   level: 'beginner' | 'intermediate' | 'advanced';
   category: string;
   startDate: Date;
@@ -31,9 +32,10 @@ export interface TrainingSession {
   date: Date;
   hours: number;
   location: string;
-  attendees: string[];
   materials: string[];
   notes?: string;
+  courseName: string; 
+  trainerId: string;
   createdAt: Date;
 }
 

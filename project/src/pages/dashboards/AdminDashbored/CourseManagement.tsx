@@ -8,6 +8,7 @@ import { useFirestoreQuery } from "../../../hooks/useFirestoreQuery";
 import { db } from "../../../lib/firebase";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Timestamp } from "firebase/firestore";
 import {
   collection,
   addDoc,
@@ -23,15 +24,19 @@ import {
 } from "firebase/firestore";
 
 // Modal Component
-const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({
-  isOpen,
-  onClose,
-  children,
-}) => {
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl p-6 relative">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-2 relative">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:hover:text-white font-bold text-xl"
@@ -43,6 +48,9 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
     </div>
   );
 };
+
+export default Modal;
+
 
 export const CourseManagement: React.FC = () => {
   const { data: coursesFromDB, loading: coursesLoading } = useFirestoreQuery<Course>(
@@ -63,6 +71,7 @@ export const CourseManagement: React.FC = () => {
     instructorName: "",
     category: "",
     duration: 0,
+    hours: 0,
     level: "beginner" as const,
     startDate: new Date(),
     endDate: new Date(),
@@ -74,18 +83,33 @@ export const CourseManagement: React.FC = () => {
   const [newCourse, setNewCourse] = useState(defaultCourse);
 
   // Format Firestore timestamps
-  useEffect(() => {
-    if (coursesFromDB) {
-      const formatted = coursesFromDB.map((course) => ({
+
+useEffect(() => {
+  if (coursesFromDB) {
+    const formatted = coursesFromDB.map((course) => {
+      const createdAt = (course.createdAt as any)?.toDate
+        ? (course.createdAt as any).toDate()
+        : course.createdAt instanceof Date
+        ? course.createdAt
+        : undefined;
+
+      const updatedAt = (course.updatedAt as any)?.toDate
+        ? (course.updatedAt as any).toDate()
+        : course.updatedAt instanceof Date
+        ? course.updatedAt
+        : undefined;
+
+      return {
         ...course,
-        createdAt:
-          course.createdAt instanceof Date ? course.createdAt : course.createdAt?.toDate(),
-        updatedAt:
-          course.updatedAt instanceof Date ? course.updatedAt : course.updatedAt?.toDate(),
-      }));
-      setCourses(formatted);
-    }
-  }, [coursesFromDB]);
+        createdAt,
+        updatedAt,
+      };
+    });
+    setCourses(formatted);
+  }
+}, [coursesFromDB]);
+
+
 
   // Filter courses by search term and status
   const filteredCourses = courses.filter((course) => {
@@ -164,6 +188,7 @@ export const CourseManagement: React.FC = () => {
           id: courseRef.id,
           instructorId: instructorUid,
           status,
+          hours:0,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -316,7 +341,16 @@ export const CourseManagement: React.FC = () => {
             : setNewCourse({ ...newCourse, instructorName: e.target.value })
         }
       />
-
+     {/* Category */}
+    <Input
+      placeholder="Category"
+      value={editingCourse ? editingCourse.category : newCourse.category}
+      onChange={(e) =>
+        editingCourse
+          ? setEditingCourse({ ...editingCourse, category: e.target.value })
+          : setNewCourse({ ...newCourse, category: e.target.value })
+      }
+    />
       {/* Duration */}
       <Input
         type="number"
@@ -391,12 +425,17 @@ export const CourseManagement: React.FC = () => {
       </div>
 
       {/* Status */}
-      <Input
-        value={editingCourse ? editingCourse.status : newCourse.status}
-        readOnly
-        placeholder="Status"
-        className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-800"
-      />
+     <Input
+  value={
+    editingCourse
+      ? editingCourse.status
+      : getCourseStatus(true, newCourse.startDate, newCourse.endDate) // 👈 derive dynamically
+  }
+  readOnly
+  placeholder="Status"
+  className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-800"
+/>
+
     </div>
 
     {/* Buttons */}
