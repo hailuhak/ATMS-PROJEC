@@ -192,7 +192,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
                   >
                     <option value="trainee">Trainee</option>
                     <option value="trainer">Trainer</option>
-                    <option value="admin">Admin</option>
                   </select>
                 </div>
               </>

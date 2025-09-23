@@ -12,7 +12,7 @@ interface MyCoursesProps {
 export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
   if (!currentUser) return <p>Loading user data...</p>;
 
-  const { allCourses, enrollments, enrollCourse } = useCourses(currentUser);
+  const { allCourses, enrollments, enrollCourse, unenrollCourse } = useCourses(currentUser);
 
   const [showAllCourses, setShowAllCourses] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,20 +21,13 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const enrolledCourseIds = useMemo(
-    () =>
-      enrollments
-        .filter((e: Enrollment) => e.userId === currentUser.uid)
-        .map((e) => e.courseId),
+    () => enrollments.filter((e: Enrollment) => e.userId === currentUser.uid).map((e) => e.courseId),
     [enrollments, currentUser.uid]
   );
 
-  const enrolledCourses: Course[] = allCourses.filter((c) =>
-    enrolledCourseIds.includes(c.id)
-  );
+  const enrolledCourses: Course[] = allCourses.filter((c) => enrolledCourseIds.includes(c.id));
 
-  const availableCoursesBase: Course[] = allCourses.filter(
-    (c) => !enrolledCourseIds.includes(c.id)
-  );
+  const availableCoursesBase: Course[] = allCourses.filter((c) => !enrolledCourseIds.includes(c.id));
 
   const availableCourses: Course[] = useMemo(() => {
     let filtered = availableCoursesBase;
@@ -43,8 +36,7 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
       filtered = filtered.filter(
         (course) =>
           course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (course.category &&
-            course.category.toLowerCase().includes(searchTerm.toLowerCase()))
+          (course.category && course.category.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -64,10 +56,7 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
     return counts;
   }, [availableCoursesBase]);
 
-  const uniqueStatuses = useMemo(
-    () => ["all", ...Object.keys(statusCounts)],
-    [statusCounts]
-  );
+  const uniqueStatuses = useMemo(() => ["all", ...Object.keys(statusCounts)], [statusCounts]);
 
   const groupedCourses: Record<string, Course[]> = useMemo(() => {
     return availableCourses.reduce((acc, course) => {
@@ -85,13 +74,22 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
   };
 
   const handleEnroll = async (course: Course) => {
-    if (course.status !== "active") return; // Only allow active courses
+    if (course.status !== "active") return;
 
     try {
       await enrollCourse(course.id);
       showFeedback(`Successfully enrolled in "${course.title}"!`);
     } catch (error: any) {
       showFeedback(error?.message || "Enrollment failed.");
+    }
+  };
+
+  const handleUnenroll = async (course: Course) => {
+    try {
+      await unenrollCourse(course.id);
+      showFeedback(`You have unenrolled from "${course.title}"`);
+    } catch (error: any) {
+      showFeedback(error?.message || "Unenroll failed.");
     }
   };
 
@@ -127,13 +125,15 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {enrolledCourses.map((course) => (
-              <CourseCard
+              <div
                 key={course.id}
-                course={course}
-                showActions={false}
-                className="h-40"
-                onView={() => console.log("View course:", course.id)}
-              />
+                className="flex flex-col justify-between h-auto rounded-lg shadow p-4 bg-white dark:bg-gray-800"
+              >
+                <CourseCard course={course} showActions={false} className="h-40" />
+                <Button size="sm" className="mt-2 w-full" onClick={() => handleUnenroll(course)}>
+                  Unenroll
+                </Button>
+              </div>
             ))}
           </div>
         )}
