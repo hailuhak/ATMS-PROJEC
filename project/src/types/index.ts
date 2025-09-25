@@ -85,7 +85,7 @@ export interface Feedback {
   createdAt: Date;
 }
 
-export interface Resource {
+export interface Materials {
   id: string;
   title: string;
   type: 'document' | 'video' | 'link' | 'other';
