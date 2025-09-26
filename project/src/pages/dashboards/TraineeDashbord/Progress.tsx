@@ -2,34 +2,44 @@ import React, { useMemo } from "react";
 import { Card, CardContent } from "../../../components/ui/Card";
 import { TrendingUp, BookOpen, CheckCircle } from "lucide-react";
 import { useCourses } from "../../../hooks/useCourses";
-import { User } from "../../../types";
+import { User, Course } from "../../../types";
 
 interface ProgressProps {
   currentUser: User;
 }
 
 export const Progress: React.FC<ProgressProps> = ({ currentUser }) => {
-  const { enrollments } = useCourses(currentUser);
+  const { enrollments, allCourses } = useCourses(currentUser);
+
+  // Map enrollments to course data for accurate stats
+  const enrolledCourses: (Course & { enrolledAt?: string; status?: string })[] = useMemo(() => {
+    if (!enrollments?.courses) return [];
+    return enrollments.courses
+      .map((e) => {
+        const course = allCourses.find((c) => c.id === e.courseId);
+        if (!course) return null;
+        return { ...course, enrolledAt: e.enrolledAt, status: e.status || course.status };
+      })
+      .filter(Boolean) as (Course & { enrolledAt?: string; status?: string })[];
+  }, [enrollments, allCourses]);
 
   const stats = useMemo(() => {
-    const completedCourses = enrollments.filter(e => e.status === "completed").length;
-    const activeCourses = enrollments.filter(e => e.status === "active").length;
+    const completedCourses = enrolledCourses.filter((c) => c.status === "completed").length;
+    const activeCourses = enrolledCourses.filter((c) => c.status === "active").length;
 
-    // Only sum hours for completed courses
-    const hoursLearned = enrollments
-      .filter(e => e.status === "completed")
-      .reduce((sum, e) => sum + (e.hours || 0), 0);
+    // Hours learned only counts completed courses
+    const hoursLearned = enrolledCourses
+      .filter((c) => c.status === "completed")
+      .reduce((sum, c) => sum + (c.hours || 0), 0);
 
-    // Total hours from all enrolled courses (for progress bar)
-    const totalHours = enrollments.reduce((sum, e) => sum + (e.hours || 0), 0);
-
-    const totalCourses = enrollments.length;
+    const totalHours = enrolledCourses.reduce((sum, c) => sum + (c.hours || 0), 0);
+    const totalCourses = enrolledCourses.length || 1;
 
     return [
       {
         label: "Courses Completed",
         value: completedCourses,
-        total: totalCourses || 1,
+        total: totalCourses,
         icon: <CheckCircle className="w-6 h-6 text-green-500" />,
       },
       {
@@ -41,11 +51,11 @@ export const Progress: React.FC<ProgressProps> = ({ currentUser }) => {
       {
         label: "Active Courses",
         value: activeCourses,
-        total: totalCourses || 1,
+        total: totalCourses,
         icon: <BookOpen className="w-6 h-6 text-yellow-500" />,
       },
     ];
-  }, [enrollments]);
+  }, [enrolledCourses]);
 
   return (
     <div className="space-y-6 p-4">
@@ -61,11 +71,8 @@ export const Progress: React.FC<ProgressProps> = ({ currentUser }) => {
 
       {/* Progress Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {stats.map(stat => {
-          const progressPercent = Math.min(
-            100,
-            Math.round((stat.value / stat.total) * 100)
-          );
+        {stats.map((stat) => {
+          const progressPercent = Math.min(100, Math.round((stat.value / stat.total) * 100));
 
           return (
             <Card

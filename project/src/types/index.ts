@@ -11,7 +11,7 @@ export interface User {
 export interface Course {
   id: string;
   title: string;
-  instructorId: string;
+  instructorId: Array<string>;
   instructorName: string;
   hours?: number; // in hours
   duration?: number; // in days
@@ -19,10 +19,12 @@ export interface Course {
   category: string;
   startDate: Date;
   endDate: Date;
+  students: Array<string>;
   materials: string[];
   status: 'draft' | 'active' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
+  completionRate?: number; // percentage
 }
 
 export interface TrainingSession {

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Button } from "../../../components/ui/Button";
 import { BookOpen, Search } from "lucide-react";
 import { CourseCard } from "../../../components/courses/CourseCard";
-import { User, Course, Enrollment } from "../../../types";
+import { User, Course } from "../../../types";
 import { useCourses } from "../../../hooks/useCourses";
 
 interface MyCoursesProps {
@@ -20,13 +20,25 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Compute enrolled course IDs
   const enrolledCourseIds = useMemo(
-    () => enrollments.filter((e: Enrollment) => e.userId === currentUser.uid).map((e) => e.courseId),
-    [enrollments, currentUser.uid]
+    () => enrollments?.courses.map((c) => c.courseId) || [],
+    [enrollments]
   );
 
-  const enrolledCourses: Course[] = allCourses.filter((c) => enrolledCourseIds.includes(c.id));
+  // Enrolled courses with full info
+  const enrolledCourses: (Course & { enrolledAt?: string })[] = useMemo(() => {
+    return enrolledCourseIds
+      .map((id) => {
+        const course = allCourses.find((c) => c.id === id);
+        if (!course) return null;
+        const enrollmentInfo = enrollments?.courses.find((e) => e.courseId === id);
+        return { ...course, enrolledAt: enrollmentInfo?.enrolledAt };
+      })
+      .filter(Boolean) as (Course & { enrolledAt?: string })[];
+  }, [enrolledCourseIds, allCourses, enrollments]);
 
+  // Available courses
   const availableCoursesBase: Course[] = allCourses.filter((c) => !enrolledCourseIds.includes(c.id));
 
   const availableCourses: Course[] = useMemo(() => {
@@ -177,9 +189,7 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ currentUser }) => {
           </div>
 
           {availableCourses.length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400">
-              No courses match your filters.
-            </p>
+            <p className="text-gray-600 dark:text-gray-400">No courses match your filters.</p>
           ) : (
             Object.keys(groupedCourses).map((status) => (
               <div key={status} className="mb-4">
