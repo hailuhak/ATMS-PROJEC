@@ -30,16 +30,18 @@ export interface Course {
 export interface TrainingSession {
   id: string;
   courseId: string;
-  title: string;
+  courseName: string;
+  createdAt: Date;
   date: Date;
   hours: number;
-  location: string;
-  materials: string[];
-  notes?: string;
-  courseName: string; 
   trainerId: string;
-  createdAt: Date;
+  attendees?: {
+    studentId: string;
+    studentName: string;
+    status?: "present" | "absent";
+  }[];
 }
+
 
 export interface ActivityLog {
   id: string;
@@ -56,10 +58,11 @@ export interface Progress {
   userId: string;
   courseId: string;
   completedSessions: string[];
-  progress: number;
+  progress: number;          
   lastAccessed: Date;
   certificateIssued: boolean;
 }
+
 
 export interface Notification {
   id: string;

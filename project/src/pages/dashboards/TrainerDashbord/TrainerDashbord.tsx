@@ -1,10 +1,9 @@
-import React from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { TrainerOverview } from './TrainerOverview';
-import { TrainerCourses } from './TrainerCourses';
-import { TrainingSessions } from './TrainingSessions';
-import { Attendance } from './Attendance';
-import { TrainingMaterials } from './TrainingMaterials';
+import React from "react";
+import { TrainerOverview } from "./TrainerOverview";
+import { TrainerCourses } from "./TrainerCourses";
+import { TrainingSessions } from "./TrainingSessions";
+import { Attendance } from "./Attendance";
+import { TrainingMaterials } from "./TrainingMaterials";
 
 interface TrainerDashboardProps {
   activeSection: string;
@@ -12,14 +11,19 @@ interface TrainerDashboardProps {
 
 export const TrainerDashboard: React.FC<TrainerDashboardProps> = ({ activeSection }) => {
   switch (activeSection) {
-    case 'courses':
+    case "courses":
       return <TrainerCourses />;
-    case 'sessions':
+
+    case "sessions":
       return <TrainingSessions />;
-    case 'attendance':
+
+    case "attendance":
+      // ✅ No need for `sessionId` — Attendance handles its own selection
       return <Attendance />;
-    case 'materials':
+
+    case "materials":
       return <TrainingMaterials />;
+
     default:
       return <TrainerOverview />;
   }

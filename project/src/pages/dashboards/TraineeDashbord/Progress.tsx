@@ -2,77 +2,101 @@ import React, { useMemo } from "react";
 import { Card, CardContent } from "../../../components/ui/Card";
 import { TrendingUp, BookOpen, CheckCircle } from "lucide-react";
 import { useCourses } from "../../../hooks/useCourses";
+import { useUserProgress } from "../../../hooks/useUserProgress";
 import { User, Course } from "../../../types";
 
 interface ProgressProps {
   currentUser: User;
 }
 
+type EnrolledCourse = Omit<Course, "enrolledAt" | "status"> & {
+  enrolledAt?: Date;
+  status?: "active" | "draft" | "completed" | "cancelled";
+};
+
 export const Progress: React.FC<ProgressProps> = ({ currentUser }) => {
   const { enrollments, allCourses } = useCourses(currentUser);
+  const { videoHours, documentHours, attendanceHours } = useUserProgress(currentUser);
 
-  // Map enrollments to course data for accurate stats
-  const enrolledCourses: (Course & { enrolledAt?: string; status?: string })[] = useMemo(() => {
+  // ✅ Build enriched list (only enrolled courses, ignore drafts)
+  const enrolledCourses: EnrolledCourse[] = useMemo(() => {
     if (!enrollments?.courses) return [];
+
     return enrollments.courses
-      .map((e) => {
-        const course = allCourses.find((c) => c.id === e.courseId);
+      .map((enrollment) => {
+        const course = allCourses.find((c) => c.id === enrollment.courseId);
         if (!course) return null;
-        return { ...course, enrolledAt: e.enrolledAt, status: e.status || course.status };
+
+        return {
+          ...course,
+          enrolledAt: enrollment.enrolledAt ? new Date(enrollment.enrolledAt) : undefined,
+          status: enrollment.status || course.status,
+        } as EnrolledCourse;
       })
-      .filter(Boolean) as (Course & { enrolledAt?: string; status?: string })[];
+      .filter((c): c is EnrolledCourse => !!c && c.status !== "draft");
   }, [enrollments, allCourses]);
 
+  // ✅ Compute stats (no double counting)
   const stats = useMemo(() => {
-    const completedCourses = enrolledCourses.filter((c) => c.status === "completed").length;
-    const activeCourses = enrolledCourses.filter((c) => c.status === "active").length;
+    const completedCount = enrolledCourses.filter((c) => c.status === "completed").length;
+    const activeCount = enrolledCourses.filter((c) => c.status === "active").length;
 
-    // Hours learned only counts completed courses
-    const hoursLearned = enrolledCourses
-      .filter((c) => c.status === "completed")
-      .reduce((sum, c) => sum + (c.hours || 0), 0);
+    // Activity-based progress (real-time)
+    const activityHours =
+      (videoHours ?? 0) + (documentHours ?? 0) + (attendanceHours ?? 0);
 
-    const totalHours = enrolledCourses.reduce((sum, c) => sum + (c.hours || 0), 0);
-    const totalCourses = enrolledCourses.length || 1;
+    // Count hours: completed courses → take course.hours, active courses → track activity
+    const hoursLearned = enrolledCourses.reduce((sum, course) => {
+      if (course.status === "completed") {
+        return sum + (course.hours ?? 0);
+      } else if (course.status === "active") {
+        return sum + activityHours;
+      }
+      return sum;
+    }, 0);
+
+    const totalHours = enrolledCourses.reduce((sum, c) => sum + (c.hours ?? 0), 0);
+    const totalCourses = enrolledCourses.length;
 
     return [
       {
         label: "Courses Completed",
-        value: completedCourses,
+        value: completedCount,
         total: totalCourses,
         icon: <CheckCircle className="w-6 h-6 text-green-500" />,
       },
       {
         label: "Hours Learned",
         value: hoursLearned,
-        total: totalHours || 1,
+        total: totalHours,
         icon: <TrendingUp className="w-6 h-6 text-blue-500" />,
       },
       {
         label: "Active Courses",
-        value: activeCourses,
+        value: activeCount,
         total: totalCourses,
         icon: <BookOpen className="w-6 h-6 text-yellow-500" />,
       },
     ];
-  }, [enrolledCourses]);
+  }, [enrolledCourses, videoHours, documentHours, attendanceHours]);
 
   return (
     <div className="space-y-6 p-4">
       {/* Header */}
-      <div>
+      <header>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           My Progress
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           Track your learning achievements and milestones
         </p>
-      </div>
+      </header>
 
-      {/* Progress Cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat) => {
-          const progressPercent = Math.min(100, Math.round((stat.value / stat.total) * 100));
+          const percentage =
+            stat.total > 0 ? Math.min(100, Math.round((stat.value / stat.total) * 100)) : 0;
 
           return (
             <Card
@@ -86,14 +110,17 @@ export const Progress: React.FC<ProgressProps> = ({ currentUser }) => {
                     {stat.label}
                   </span>
                 </div>
+
+                {/* Progress Bar */}
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                   <div
                     className="bg-blue-500 dark:bg-blue-400 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${progressPercent}%` }}
+                    style={{ width: `${percentage}%` }}
                   />
                 </div>
+
                 <p className="text-right text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {stat.value} / {stat.total} ({progressPercent}%)
+                  {stat.value} / {stat.total} ({percentage}%)
                 </p>
               </CardContent>
             </Card>
