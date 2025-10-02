@@ -14,11 +14,11 @@ export const TrainerDashboard: React.FC<TrainerDashboardProps> = ({ activeSectio
     case "courses":
       return <TrainerCourses />;
 
+
     case "sessions":
       return <TrainingSessions />;
 
     case "attendance":
-      // ✅ No need for `sessionId` — Attendance handles its own selection
       return <Attendance />;
 
     case "materials":

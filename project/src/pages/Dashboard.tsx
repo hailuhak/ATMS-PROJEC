@@ -4,10 +4,14 @@ import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
 import { AdminDashboard } from './dashboards/AdminDashbored/AdminDashboard';
 import { TraineeDashboard } from './dashboards/TraineeDashbord/TraineeDashboard';
-import { TrainerDashboard } from './dashboards/TrainerDashbord/TrainerDashbord'; // adjust path if needed
-
+import { TrainerDashboard } from './dashboards/TrainerDashbord/TrainerDashbord';
 import { UserDashboard } from './dashboards/AllUserDashbord/UserDashboard';
 import { AdminPanel } from './dashboards/AdminDashbored/AdminPanel';
+
+// ✅ Import the new component
+import Sessions from './dashboards/AdminDashbored/Session';
+import GradeReport from './dashboards/AdminDashbored/GradeReport';
+
 import { useAuth } from '../contexts/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -48,18 +52,20 @@ export const Dashboard: React.FC = () => {
 
     // Show dashboard based on actual role
     switch (currentUser.role) {
-    case 'admin':
-  switch (activeSection) {
-    case 'pending-users':
-      return <AdminPanel />;
-    default:
-      return <AdminDashboard activeSection={activeSection} />;
-  }
+      case 'admin':
+        switch (activeSection) {
+          case 'pending-users':
+            return <AdminPanel />;
+          default:
+            return <AdminDashboard activeSection={activeSection} />;
+        }
 
       case 'trainer':
         return <TrainerDashboard activeSection={activeSection} />;
+
       case 'trainee':
         return <TraineeDashboard activeSection={activeSection} />;
+
       default:
         return <UserDashboard activeSection={activeSection} />;
     }

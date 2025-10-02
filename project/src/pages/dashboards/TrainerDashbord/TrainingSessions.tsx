@@ -3,36 +3,47 @@ import { Card, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
 import { Plus, Calendar, X, Edit2, Trash2 } from "lucide-react";
 import { db } from "../../../lib/firebase";
-import { collection, addDoc, query, where, onSnapshot, Timestamp, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { 
+  collection, addDoc, query, where, onSnapshot, Timestamp, 
+  getDocs, deleteDoc, doc, updateDoc 
+} from "firebase/firestore";
 import { useAuth } from "../../../contexts/AuthContext";
 import { TrainingSession, Course } from "../../../types";
+
+interface GeneralSession {
+  id: string;
+  title: string;
+  regStart: string;
+  regEnd: string;
+  trainStart: string;
+  trainEnd: string;
+}
 
 export const TrainingSessions: React.FC = () => {
   const { currentUser } = useAuth();
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
+  const [generalSessions, setGeneralSessions] = useState<GeneralSession[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFormModal, setShowFormModal] = useState(false);
 
-  // Form fields
   const [courseId, setCourseId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
 
-  // Fetch courses once
+  // Fetch courses
   useEffect(() => {
     const fetchCourses = async () => {
-      const q = query(collection(db, "courses"));
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(collection(db, "courses"));
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as Course) }));
       setCourses(data);
     };
     fetchCourses();
   }, []);
 
-  // Fetch sessions in real-time
+  // Fetch trainer-specific sessions in real-time
   useEffect(() => {
     if (!currentUser) return;
     const q = query(collection(db, "trainingSessions"), where("trainerId", "==", currentUser.uid));
@@ -49,8 +60,31 @@ export const TrainingSessions: React.FC = () => {
     return () => unsubscribe();
   }, [currentUser]);
 
+  // Fetch general sessions
+  useEffect(() => {
+    const fetchSessions = async () => {
+      const snapshot = await getDocs(collection(db, "sessions"));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        title: doc.data().title || "",
+        regStart: doc.data().regStart || "",
+        regEnd: doc.data().regEnd || "",
+        trainStart: doc.data().trainStart || "",
+        trainEnd: doc.data().trainEnd || "",
+      }));
+      setGeneralSessions(data);
+    };
+    fetchSessions();
+  }, []);
+
   const formatDate = (date: Date) =>
-    date.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+    date.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+
+  const formatStringDate = (dateString: string) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  };
 
   const handleSchedule = async () => {
     if (!courseId || !date || !startTime || !endTime) return;
@@ -58,11 +92,9 @@ export const TrainingSessions: React.FC = () => {
     const start = new Date(`${date}T${startTime}`);
     const end = new Date(`${date}T${endTime}`);
     const durationHours = parseFloat(((end.getTime() - start.getTime()) / (1000 * 60 * 60)).toFixed(2));
-
     const course = courses.find((c) => c.id === courseId);
 
     if (editingSessionId) {
-      // Update existing session
       const sessionRef = doc(db, "trainingSessions", editingSessionId);
       await updateDoc(sessionRef, {
         courseId,
@@ -72,7 +104,6 @@ export const TrainingSessions: React.FC = () => {
       });
       setEditingSessionId(null);
     } else {
-      // Add new session
       await addDoc(collection(db, "trainingSessions"), {
         courseId,
         courseName: course?.title || "",
@@ -84,7 +115,6 @@ export const TrainingSessions: React.FC = () => {
       });
     }
 
-    // reset form & close modal
     setCourseId("");
     setDate("");
     setStartTime("");
@@ -108,99 +138,125 @@ export const TrainingSessions: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Training Sessions</h1>
-        <Button
-          onClick={() => setShowFormModal(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
-        >
-          <Plus className="w-4 h-4" /> Add Session
-        </Button>
-      </div>
-
-      {/* Sessions Table */}
-      <Card className="bg-white dark:bg-gray-800 shadow-md overflow-x-auto">
+    <div className="space-y-8 p-4 sm:p-6">
+      {/* ---------- General Sessions ---------- */}
+      <Card className="shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <CardContent>
-          {loading ? (
-            <p className="text-gray-700 dark:text-gray-300">Loading sessions...</p>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">No sessions scheduled yet.</p>
-            </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+            General Training Sessions
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm sm:text-base">
               <thead>
-                <tr className="bg-gray-100 dark:bg-gray-700">
-                  <th className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300">Course</th>
-                  <th className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300">Date</th>
-                  <th className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300">Start Time</th>
-                  <th className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300">End Time</th>
-                  <th className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300">Duration (hrs)</th>
-                  <th className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300">Actions</th>
+                <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                  <th className="px-4 py-3 text-left">Title</th>
+                  <th className="px-4 py-3 text-left">Reg Start</th>
+                  <th className="px-4 py-3 text-left">Reg End</th>
+                  <th className="px-4 py-3 text-left">Training Start</th>
+                  <th className="px-4 py-3 text-left">Training End</th>
                 </tr>
               </thead>
-
               <tbody>
-                {sessions.map((s) => {
-                  const start = new Date(s.date);
-                  const end = new Date(start.getTime() + s.hours * 60 * 60 * 1000);
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const sessionDay = new Date(start);
-                  sessionDay.setHours(0, 0, 0, 0);
-
-                  let rowBg = "bg-white dark:bg-gray-800";
-                  let textColor = "text-gray-800 dark:text-gray-200";
-
-                  if (sessionDay < today) {
-                    rowBg = "bg-gray-100 dark:bg-gray-700";
-                    textColor = "text-gray-500 dark:text-gray-300";
-                  } else if (sessionDay.getTime() === today.getTime()) {
-                    rowBg = "bg-yellow-100 dark:bg-yellow-600";
-                    textColor = "text-gray-900 dark:text-white";
-                  } else {
-                    rowBg = "bg-green-100 dark:bg-green-600";
-                    textColor = "text-gray-900 dark:text-white";
-                  }
-
-                  return (
-                    <React.Fragment key={s.id}>
-                      <tr className={`${rowBg} ${textColor} hover:bg-gray-50 dark:hover:bg-gray-700`}>
-                        <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-600">{s.courseName}</td>
-                        <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-600">{formatDate(start)}</td>
-                        <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-600">
-                          {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </td>
-                        <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-600">
-                          {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </td>
-                        <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-600">{s.hours.toFixed(2)}</td>
-                        <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-600 flex gap-2">
-  <Edit2
-    className="w-5 h-5 cursor-pointer text-blue-600 hover:text-blue-400"
-    onClick={() => handleEdit(s)}
-  />
-  <Trash2
-    className="w-5 h-5 cursor-pointer text-red-600 hover:text-red-400"
-    onClick={() => handleDelete(s.id!)}
-  />
-</td>
-
-                      </tr>
-
-                    </React.Fragment>
-                  );
-                })}
+                {generalSessions.map((session, idx) => (
+                  <tr
+                    key={session.id}
+                    className={`border-b border-gray-200 dark:border-gray-700 ${
+                      idx % 2 === 0
+                        ? "bg-white dark:bg-gray-900"
+                        : "bg-gray-50 dark:bg-gray-800"
+                    } hover:bg-gray-100 dark:hover:bg-gray-700`}
+                  >
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{session.title}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{formatStringDate(session.regStart)}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{formatStringDate(session.regEnd)}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{formatStringDate(session.trainStart)}</td>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{formatStringDate(session.trainEnd)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Add/Edit Session Modal */}
+      {/* ---------- Trainer's Sessions ---------- */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+            My Training Sessions
+          </h1>
+          <Button
+            onClick={() => setShowFormModal(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
+          >
+            <Plus className="w-4 h-4" /> Add Session
+          </Button>
+        </div>
+
+        <Card className="bg-white dark:bg-gray-900 shadow-md overflow-x-auto">
+          <CardContent>
+            {loading ? (
+              <p className="text-gray-700 dark:text-gray-300">Loading sessions...</p>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">No sessions scheduled yet.</p>
+              </div>
+            ) : (
+              <table className="w-full border-collapse text-sm sm:text-base">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                    <th className="px-4 py-2 text-left">Course</th>
+                    <th className="px-4 py-2 text-left">Date</th>
+                    <th className="px-4 py-2 text-left">Start Time</th>
+                    <th className="px-4 py-2 text-left">End Time</th>
+                    <th className="px-4 py-2 text-left">Duration (hrs)</th>
+                    <th className="px-4 py-2 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessions.map((s, idx) => {
+                    const start = new Date(s.date);
+                    const end = new Date(start.getTime() + s.hours * 60 * 60 * 1000);
+                    return (
+                      <tr
+                        key={s.id}
+                        className={`border-b border-gray-200 dark:border-gray-700 ${
+                          idx % 2 === 0
+                            ? "bg-white dark:bg-gray-900"
+                            : "bg-gray-50 dark:bg-gray-800"
+                        } hover:bg-gray-100 dark:hover:bg-gray-700`}
+                      >
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{s.courseName}</td>
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{formatDate(start)}</td>
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">
+                          {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">
+                          {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{s.hours.toFixed(2)}</td>
+                        <td className="px-4 py-2 flex gap-3">
+                          <Edit2
+                            className="w-5 h-5 cursor-pointer text-blue-600 hover:text-blue-400"
+                            onClick={() => handleEdit(s)}
+                          />
+                          <Trash2
+                            className="w-5 h-5 cursor-pointer text-red-600 hover:text-red-400"
+                            onClick={() => handleDelete(s.id!)}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ---------- Modal ---------- */}
       {showFormModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-96 shadow-lg relative">

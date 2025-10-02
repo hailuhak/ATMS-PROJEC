@@ -25,52 +25,52 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  // Track window resize to handle responsive behavior
+  // Handle responsiveness
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Define all menu items
   const allMenuItems = [
-  // Common (all roles, including guest)
-  { id: 'dashboard', label: 'Home', icon: Home },
+    // Common
+    { id: 'dashboard', label: 'Home', icon: Home },
 
-  // Admin only
-  { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
-  { id: 'pending-users', label: 'Pending Users', icon: UserCheck, roles: ['admin'] },
-  { id: 'courses', label: 'Course Management', icon: BookOpen, roles: ['admin'] },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, roles: ['admin'] },
-  { id: 'activities', label: 'Activity Logs', icon: FileText, roles: ['admin'] },
+    // Admin only
+    { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
+    { id: 'pending-users', label: 'Pending Users', icon: UserCheck, roles: ['admin'] },
+    { id: 'courses', label: 'Course Management', icon: BookOpen, roles: ['admin'] },
+    { id: 'sessions', label: 'Sessions', icon: Calendar, roles: ['admin'] },
+    { id: 'grades', label: 'Grades', icon: BarChart3, roles: ['admin'] },
+    { id: 'activities', label: 'Activity Logs', icon: FileText, roles: ['admin'] },
 
-  // Trainer only
-  { id: 'courses', label: 'My Courses', icon: BookOpen, roles: ['trainer'] },
-  { id: 'sessions', label: 'Training Sessions', icon: Calendar, roles: ['trainer'] },
-  { id: 'attendance', label: 'Attendance', icon: UserCheck, roles: ['trainer'] },
-  { id: 'materials', label: 'Materials', icon: FileText, roles: ['trainer'] },
+    // Trainer only
+    { id: 'courses', label: 'My Courses', icon: BookOpen, roles: ['trainer'] },
+    { id: 'sessions', label: 'Training Sessions', icon: Calendar, roles: ['trainer'] },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck, roles: ['trainer'] },
+    { id: 'materials', label: 'Materials', icon: FileText, roles: ['trainer'] },
 
-  // Trainee only
-  { id: 'courses', label: 'My Courses', icon: GraduationCap, roles: ['trainee'] },
-  { id: 'progress', label: 'Progress', icon: BarChart3, roles: ['trainee'] },
-  { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['trainee'] },
-  { id: 'resources', label: 'Resources', icon: FileText, roles: ['trainee'] },
 
-  // Default / guest (no role or other role)
-  { id: 'courses', label: 'Browse Courses', icon: BookOpen, roles: ['pending'] },
-  { id: 'profile', label: 'Profile', icon: Users, roles: ['pending'] },
-];
+    // Trainee only
+    { id: 'courses', label: 'My Courses', icon: GraduationCap, roles: ['trainee'] },
+    { id: 'progress', label: 'Progress', icon: BarChart3, roles: ['trainee'] },
+    { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['trainee'] },
+    { id: 'resources', label: 'Resources', icon: FileText, roles: ['trainee'] },
 
+    // Guest
+    { id: 'courses', label: 'Browse Courses', icon: BookOpen, roles: ['pending'] },
+    { id: 'profile', label: 'Profile', icon: Users, roles: ['pending'] },
+  ];
 
   const role = currentUser?.role || 'pending';
-
-const menuItems = allMenuItems.filter(
-  (item) => !item.roles || item.roles.includes(role)
-);
-
+  const menuItems = allMenuItems.filter(
+    (item) => !item.roles || item.roles.includes(role)
+  );
 
   return (
     <>
-      {/* Hamburger Button */}
+      {/* Hamburger (mobile) */}
       {isMobile && (
         <div className="fixed top-4 left-4 z-50">
           <button
@@ -85,15 +85,15 @@ const menuItems = allMenuItems.filter(
       {/* Sidebar */}
       <AnimatePresence>
         {(isOpen || !isMobile) && (
-         <motion.aside
-            className="fixed lg:static top-0 left-0 z-50 w-48 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 min-h-screen"
+          <motion.aside
+            className="fixed lg:static top-0 left-0 z-50 w-56 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 min-h-screen"
             initial={{ x: isMobile ? -300 : 0 }}
             animate={{ x: 0 }}
             exit={{ x: isMobile ? -300 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            >
+          >
             <div className="p-6 flex flex-col h-full">
-              {/* Close button on mobile */}
+              {/* Close on mobile */}
               {isMobile && (
                 <div className="flex justify-end mb-4">
                   <button onClick={() => setIsOpen(false)} className="text-gray-700 dark:text-gray-200">
@@ -102,6 +102,7 @@ const menuItems = allMenuItems.filter(
                 </div>
               )}
 
+              {/* Nav */}
               <nav className="space-y-2 flex-1">
                 {menuItems.map((item) => (
                   <motion.button
@@ -120,7 +121,6 @@ const menuItems = allMenuItems.filter(
                     whileTap={{ scale: 0.98 }}
                   >
                     <item.icon className="w-5 h-5 mr-3" />
-                    {/* Show label if sidebar is open or on large screens */}
                     {(!isMobile || isOpen) && <span>{item.label}</span>}
                   </motion.button>
                 ))}
@@ -130,7 +130,7 @@ const menuItems = allMenuItems.filter(
         )}
       </AnimatePresence>
 
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {isOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"

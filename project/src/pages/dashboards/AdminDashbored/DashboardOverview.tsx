@@ -4,10 +4,10 @@ import { CourseCard } from "../../../components/courses/CourseCard";
 import { RecentActivity } from "../../../components/Cards/RecentActivity";
 import { Card, CardContent, CardHeader } from "../../../components/ui/Card"; 
 import { Button } from "../../../components/ui/Button";
-import { Plus, Users, BookOpen, TrendingUp, Activity } from "lucide-react";
+import { Users, BookOpen, TrendingUp, Activity } from "lucide-react";
 import { db } from "../../../lib/firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { Course } from "../../../types";
+import { Course, ActivityLog } from "../../../types";
 
 export const DashboardOverview: React.FC = () => {
   const [usersCount, setUsersCount] = useState(0);
@@ -15,12 +15,16 @@ export const DashboardOverview: React.FC = () => {
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [showAllCourses, setShowAllCourses] = useState(false);
 
-  // Real-time Firestore listeners
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+
   useEffect(() => {
+    // Users count listener
     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
       setUsersCount(snapshot.size);
     });
 
+    // Courses listener
     const coursesQuery = query(
       collection(db, "courses"),
       orderBy("createdAt", "desc")
@@ -54,9 +58,24 @@ export const DashboardOverview: React.FC = () => {
       setCoursesLoading(false);
     });
 
+    // Activity logs listener
+    const logsQuery = query(
+      collection(db, "activityLogs"),
+      orderBy("timestamp", "desc")
+    );
+    const unsubscribeLogs = onSnapshot(logsQuery, (snapshot) => {
+      const activityData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<ActivityLog, "id">),
+      })) as ActivityLog[];
+      setLogs(activityData);
+      setLogsLoading(false);
+    });
+
     return () => {
       unsubscribeUsers();
       unsubscribeCourses();
+      unsubscribeLogs();
     };
   }, []);
 
@@ -84,7 +103,6 @@ export const DashboardOverview: React.FC = () => {
             Manage your audit training system
           </p>
         </div>
-        
       </div>
 
       {/* Stats */}
@@ -155,7 +173,7 @@ export const DashboardOverview: React.FC = () => {
           </Card>
         </div>
         <div>
-          <RecentActivity />
+          <RecentActivity logs={logs} loading={logsLoading} />
         </div>
       </div>
     </div>
