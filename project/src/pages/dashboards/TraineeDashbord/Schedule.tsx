@@ -27,16 +27,13 @@ export const Schedule: React.FC = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    // 🔹 Step 1: Listen to enrollments for this trainee
     const enrollmentRef = collection(db, "enrollments");
     const q = query(enrollmentRef, where("userId", "==", currentUser.uid));
 
     const unsubscribeEnrollments = onSnapshot(q, (enrollmentSnap) => {
       const courseIds = enrollmentSnap.docs
         .map((doc) => doc.data().courseId)
-        .filter(Boolean); // remove undefined/null
-
-      console.log("✅ Enrolled courseIds:", courseIds);
+        .filter(Boolean);
 
       if (courseIds.length === 0) {
         setSessions([]);
@@ -44,14 +41,8 @@ export const Schedule: React.FC = () => {
         return;
       }
 
-      // 🔹 Step 2: Listen to training sessions in those courses
       const sessionsRef = collection(db, "trainingSessions");
-
-      // ⚠️ Firestore "in" only supports up to 10 values
-      const batches =
-        courseIds.length > 10
-          ? [courseIds.slice(0, 10)]
-          : [courseIds];
+      const batches = courseIds.length > 10 ? [courseIds.slice(0, 10)] : [courseIds];
 
       const unsubscribes = batches.map((batchIds) => {
         const sessionsQuery = query(sessionsRef, where("courseId", "in", batchIds));
@@ -61,9 +52,9 @@ export const Schedule: React.FC = () => {
             let sessionDate: Date;
 
             if (data.date?.toDate) {
-              sessionDate = data.date.toDate(); // Firestore Timestamp
+              sessionDate = data.date.toDate();
             } else {
-              sessionDate = new Date(data.date); // fallback if stored as string
+              sessionDate = new Date(data.date);
             }
 
             return {
@@ -75,26 +66,20 @@ export const Schedule: React.FC = () => {
             };
           });
 
-          console.log("📌 Raw sessions:", allSessions);
-
-          // 🔹 Step 3: Keep only upcoming or ongoing sessions
           const now = new Date();
           const upcoming = allSessions
             .filter((s) => {
               const start = s.date.getTime();
               const end = start + s.hours * 60 * 60 * 1000;
-              return end >= now.getTime(); // show ongoing + future
+              return end >= now.getTime();
             })
             .sort((a, b) => a.date.getTime() - b.date.getTime());
-
-          console.log("🚀 Upcoming sessions:", upcoming);
 
           setSessions(upcoming);
           setLoading(false);
         });
       });
 
-      // Cleanup sessions listeners when enrollments change
       return () => unsubscribes.forEach((unsub) => unsub());
     });
 

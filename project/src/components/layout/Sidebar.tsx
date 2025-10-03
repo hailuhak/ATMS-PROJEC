@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Home, 
-  BookOpen, 
-  Users, 
-  Calendar, 
-  BarChart3, 
+import {
+  Home,
+  BookOpen,
+  Users,
+  Calendar,
+  BarChart3,
   FileText,
   UserCheck,
   GraduationCap,
+  Monitor,
   Menu,
-  X 
+  X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { clsx } from 'clsx';
@@ -57,6 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
     { id: 'progress', label: 'Progress', icon: BarChart3, roles: ['trainee'] },
     { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['trainee'] },
     { id: 'resources', label: 'Resources', icon: FileText, roles: ['trainee'] },
+    { id: 'elearning', label: 'E-Learning', icon: Monitor, roles: ['trainee'] },
 
     // Guest
     { id: 'courses', label: 'Browse Courses', icon: BookOpen, roles: ['pending'] },

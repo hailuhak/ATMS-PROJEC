@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, BookOpen, Edit2, Trash2 } from "lucide-react";
 import { Course } from "../../types";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/Card";
 import { Button } from "../ui/Button";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 interface CourseCardProps {
   course: Course;
@@ -51,10 +53,34 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   onDelete,
   onView,
   showActions = true,
-  className = "", // default empty string
+  className = "",
 }) => {
+  const [sessionDates, setSessionDates] = useState<{ trainStart?: string; trainEnd?: string }>({});
+
+  useEffect(() => {
+    const fetchSessionDates = async () => {
+      try {
+        const sessionsSnap = await getDocs(collection(db, 'sessions'));
+        if (!sessionsSnap.empty) {
+          const sessionData = sessionsSnap.docs[0].data();
+          setSessionDates({
+            trainStart: sessionData.trainStart,
+            trainEnd: sessionData.trainEnd,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching session dates:', error);
+      }
+    };
+
+    fetchSessionDates();
+  }, []);
+
   const levelColor = levelColors[course.level ?? "default"];
   const statusColor = statusColors[course.status ?? "default"];
+
+  const displayStartDate = sessionDates.trainStart || course.startDate;
+  const displayEndDate = sessionDates.trainEnd || course.endDate;
 
   return (
     <motion.div
@@ -63,7 +89,6 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       transition={{ duration: 0.3 }}
     >
       <Card className={`relative hover:shadow-lg transition-shadow duration-300 rounded-xl flex flex-col justify-between h-full min-h-[280px] ${className}`}>
-        {/* Header */}
         <CardHeader className="pb-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2">
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white line-clamp-2">
@@ -83,7 +108,6 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           </p>
         </CardHeader>
 
-        {/* Content */}
         <CardContent className="flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-2">
@@ -92,7 +116,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-              {formatDate(course.startDate)}
+              {formatDate(displayStartDate)}
             </div>
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -100,7 +124,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-              {course.endDate ? formatDate(course.endDate) : "N/A"}
+              {displayEndDate ? formatDate(displayEndDate) : "N/A"}
             </div>
           </div>
         </CardContent>

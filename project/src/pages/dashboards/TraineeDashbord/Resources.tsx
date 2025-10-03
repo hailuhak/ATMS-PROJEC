@@ -9,38 +9,64 @@ import {
   X,
 } from 'lucide-react';
 import { db } from '../../../lib/firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface Resource {
   id: string;
   name: string;
   type: string;
-  content: string; // URL, Base64, or data URL
+  content: string;
   description?: string;
+  courseId?: string;
 }
 
 export const Resources: React.FC = () => {
+  const { currentUser } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
   const [modalResource, setModalResource] = useState<Resource | null>(null);
 
   useEffect(() => {
     const fetchResources = async () => {
-      const q = query(collection(db, 'trainingMaterials'), orderBy('uploadedAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((doc) => {
-        const d = doc.data() as any;
-        return {
-          id: doc.id,
-          name: d.name,
-          type: d.type,
-          content: d.content,
-          description: d.description || '',
-        } as Resource;
-      });
+      if (!currentUser) return;
+
+      const enrollmentRef = collection(db, 'enrollments');
+      const enrollmentQuery = query(enrollmentRef, where('userId', '==', currentUser.uid));
+      const enrollmentSnap = await getDocs(enrollmentQuery);
+
+      const enrolledCourseIds = enrollmentSnap.docs
+        .map((doc) => doc.data().courseId)
+        .filter(Boolean);
+
+      if (enrolledCourseIds.length === 0) {
+        setResources([]);
+        return;
+      }
+
+      const materialsRef = collection(db, 'trainingMaterials');
+      const materialsQuery = query(materialsRef, orderBy('uploadedAt', 'desc'));
+      const snapshot = await getDocs(materialsQuery);
+
+      const data = snapshot.docs
+        .map((doc) => {
+          const d = doc.data() as any;
+          return {
+            id: doc.id,
+            name: d.name,
+            type: d.type,
+            content: d.content,
+            description: d.description || '',
+            courseId: d.courseId,
+          } as Resource;
+        })
+        .filter((resource) =>
+          resource.courseId && enrolledCourseIds.includes(resource.courseId)
+        );
+
       setResources(data);
     };
     fetchResources();
-  }, []);
+  }, [currentUser]);
 
   const getIcon = (type: string) => {
     const baseStyle = 'w-8 h-8';
