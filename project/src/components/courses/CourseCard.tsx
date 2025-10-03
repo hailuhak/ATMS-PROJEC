@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, BookOpen, Edit2, Trash2 } from "lucide-react";
+import { Calendar, Clock, BookOpen, CreditCard as Edit2, Trash2 } from "lucide-react";
 import { Course } from "../../types";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/Card";
 import { Button } from "../ui/Button";
