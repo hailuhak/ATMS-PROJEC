@@ -18,7 +18,7 @@ export const activityService = {
     target: string, 
     details: string
   ) {
-    await addDoc(collection(db, 'activities'), {
+    await addDoc(collection(db, 'activityLogs'), {
       userId,
       userName,
       action,
@@ -30,7 +30,7 @@ export const activityService = {
 
   async getRecentActivities(limitCount = 10) {
     const q = query(
-      collection(db, 'activities'),
+      collection(db, 'activityLogs'),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
     );
@@ -44,7 +44,7 @@ export const activityService = {
 
   async getUserActivities(userId: string, limitCount = 20) {
     const q = query(
-      collection(db, 'activities'),
+      collection(db, 'activityLogs'),
       where('userId', '==', userId),
       orderBy('timestamp', 'desc'),
       limit(limitCount)

@@ -5,9 +5,10 @@ import { UserManagement } from "./UserManagement";
 import  Session from "./Session";
 import { ActivityLogs } from "./ActivityLogs";
 import GradeReport from "./GradeReport";
+import { PendingUsers } from "./PendingUsers";
 
 interface AdminDashboardProps {
-  activeSection: "users" | "courses" | "sessions" | "activities" | "grades";
+  activeSection: "users" | "courses" | "sessions" | "activities" | "grades" | "pending";
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeSection }) => {
@@ -22,6 +23,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeSection })
       return <ActivityLogs />;
     case "grades":
       return <GradeReport />;
+    case "pending":
+      return <PendingUsers />;
     default:
       return <DashboardOverview />;
   }

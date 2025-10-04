@@ -5,14 +5,13 @@ import { Card, CardContent, CardHeader } from '../ui/Card';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 
-// Define Activity type
 export interface ActivityLog {
   id: string;
   userName: string;
   action: string;
   target: string;
   details?: string;
-  timestamp: Date; // we convert Firestore Timestamp to Date
+  timestamp: Date;
 }
 
 export const RecentActivity: React.FC = () => {
@@ -21,7 +20,7 @@ export const RecentActivity: React.FC = () => {
 
   useEffect(() => {
     const q = query(
-      collection(db, 'activities'),
+      collection(db, 'activityLogs'),
       orderBy('timestamp', 'desc'),
       limit(5)
     );
@@ -37,7 +36,7 @@ export const RecentActivity: React.FC = () => {
           details: data.details || '',
           timestamp: data.timestamp instanceof Timestamp
             ? data.timestamp.toDate()
-            : new Date(data.timestamp), // fallback
+            : new Date(data.timestamp),
         };
       });
 

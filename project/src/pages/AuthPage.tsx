@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface AuthPageProps {
   onBack: () => void;
@@ -26,6 +28,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [canSignup, setCanSignup] = useState(false);
+  const [registrationMessage, setRegistrationMessage] = useState('');
 
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -36,6 +40,53 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   });
 
   const { login, signup, loginWithGoogle } = useAuth();
+
+  useEffect(() => {
+    const checkRegistrationPeriod = async () => {
+      try {
+        const q = query(
+          collection(db, 'sessions'),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          setCanSignup(false);
+          setRegistrationMessage('No active registration session available.');
+          return;
+        }
+
+        const sessionData = snapshot.docs[0].data();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const regStart = new Date(sessionData.regStart);
+        const regEnd = new Date(sessionData.regEnd);
+        regStart.setHours(0, 0, 0, 0);
+        regEnd.setHours(23, 59, 59, 999);
+
+        if (today >= regStart && today <= regEnd) {
+          setCanSignup(true);
+          setRegistrationMessage('');
+        } else if (today < regStart) {
+          setCanSignup(false);
+          setRegistrationMessage(`Registration opens on ${sessionData.regStart}`);
+        } else {
+          setCanSignup(false);
+          setRegistrationMessage(`Registration closed on ${sessionData.regEnd}`);
+        }
+      } catch (err) {
+        console.error('Error checking registration period:', err);
+        setCanSignup(false);
+        setRegistrationMessage('Unable to verify registration period.');
+      }
+    };
+
+    if (!isLogin) {
+      checkRegistrationPeriod();
+    }
+  }, [isLogin]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = e.target.name === 'role' ? (e.target.value as Role) : e.target.value;
@@ -197,7 +248,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               </>
             )}
 
-            <Button type="submit" className="w-full" size="lg" loading={loading}>
+            {!isLogin && !canSignup && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 px-4 py-3 rounded-lg mb-4">
+                {registrationMessage}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              loading={loading}
+              disabled={!isLogin && !canSignup}
+            >
               {isLogin ? 'Sign In' : 'Create Account'}
             </Button>
           </form>

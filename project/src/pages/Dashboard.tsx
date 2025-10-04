@@ -6,9 +6,8 @@ import { AdminDashboard } from './dashboards/AdminDashbored/AdminDashboard';
 import { TraineeDashboard } from './dashboards/TraineeDashbord/TraineeDashboard';
 import { TrainerDashboard } from './dashboards/TrainerDashbord/TrainerDashbord';
 import { UserDashboard } from './dashboards/AllUserDashbord/UserDashboard';
-import { AdminPanel } from './dashboards/AdminDashbored/AdminPanel';
+import { PendingUsers } from './dashboards/AdminDashbored/PendingUsers';
 
-// ✅ Import the new component
 import Sessions from './dashboards/AdminDashbored/Session';
 import GradeReport from './dashboards/AdminDashbored/GradeReport';
 
@@ -22,7 +21,6 @@ export const Dashboard: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(authUser);
   const [activeSection, setActiveSection] = useState('dashboard');
 
-  // --- Live role update from Firestore ---
   useEffect(() => {
     if (!authUser) return;
 
@@ -38,7 +36,6 @@ export const Dashboard: React.FC = () => {
   const getDashboardComponent = () => {
     if (!currentUser) return null;
 
-    // Show UserDashboard if role is "pending" or undefined
     if (!currentUser.role || currentUser.role === 'pending') {
       return (
         <div className="space-y-4">
@@ -50,12 +47,11 @@ export const Dashboard: React.FC = () => {
       );
     }
 
-    // Show dashboard based on actual role
     switch (currentUser.role) {
       case 'admin':
         switch (activeSection) {
           case 'pending-users':
-            return <AdminPanel />;
+            return <PendingUsers />;
           default:
             return <AdminDashboard activeSection={activeSection} />;
         }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Hop as Home, BookOpen, Users, Calendar, ChartBar as BarChart3, FileText, UserCheck, GraduationCap, Monitor, Menu, X } from 'lucide-react';
+import { Home, BookOpen, Users, Calendar, BarChart3, FileText, UserCheck, GraduationCap, Monitor, Menu, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { clsx } from 'clsx';
 
@@ -14,19 +14,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  // Handle responsiveness
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Define all menu items
   const allMenuItems = [
-    // Common
     { id: 'dashboard', label: 'Home', icon: Home },
 
-    // Admin only
     { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
     { id: 'pending-users', label: 'Pending Users', icon: UserCheck, roles: ['admin'] },
     { id: 'courses', label: 'Course Management', icon: BookOpen, roles: ['admin'] },
@@ -34,21 +30,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
     { id: 'grades', label: 'Grades', icon: BarChart3, roles: ['admin'] },
     { id: 'activities', label: 'Activity Logs', icon: FileText, roles: ['admin'] },
 
-    // Trainer only
     { id: 'courses', label: 'My Courses', icon: BookOpen, roles: ['trainer'] },
     { id: 'sessions', label: 'Training Sessions', icon: Calendar, roles: ['trainer'] },
     { id: 'attendance', label: 'Attendance', icon: UserCheck, roles: ['trainer'] },
     { id: 'materials', label: 'Materials', icon: FileText, roles: ['trainer'] },
 
-
-    // Trainee only
     { id: 'courses', label: 'My Courses', icon: GraduationCap, roles: ['trainee'] },
     { id: 'progress', label: 'Progress', icon: BarChart3, roles: ['trainee'] },
     { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['trainee'] },
     { id: 'resources', label: 'Resources', icon: FileText, roles: ['trainee'] },
     { id: 'elearning', label: 'E-Learning', icon: Monitor, roles: ['trainee'] },
 
-    // Guest
     { id: 'courses', label: 'Browse Courses', icon: BookOpen, roles: ['pending'] },
     { id: 'profile', label: 'Profile', icon: Users, roles: ['pending'] },
   ];
@@ -60,7 +52,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
 
   return (
     <>
-      {/* Hamburger (mobile) */}
       {isMobile && (
         <div className="fixed top-4 left-4 z-50">
           <button
@@ -72,7 +63,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
         </div>
       )}
 
-      {/* Sidebar */}
       <AnimatePresence>
         {(isOpen || !isMobile) && (
           <motion.aside
@@ -83,7 +73,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
             <div className="p-6 flex flex-col h-full">
-              {/* Close on mobile */}
               {isMobile && (
                 <div className="flex justify-end mb-4">
                   <button onClick={() => setIsOpen(false)} className="text-gray-700 dark:text-gray-200">
@@ -92,7 +81,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
                 </div>
               )}
 
-              {/* Nav */}
               <nav className="space-y-2 flex-1">
                 {menuItems.map((item) => (
                   <motion.button
@@ -120,7 +108,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
         )}
       </AnimatePresence>
 
-      {/* Mobile overlay */}
       {isOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
