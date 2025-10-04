@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, BookOpen, Users, Calendar, BarChart3, FileText, UserCheck, GraduationCap, Monitor, Menu, X } from 'lucide-react';
+import { Hop as Home, BookOpen, Users, Calendar, ChartBar as BarChart3, FileText, UserCheck, GraduationCap, Monitor, Menu, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { clsx } from 'clsx';
 
